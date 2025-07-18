@@ -11,6 +11,7 @@ export interface PackageDetails {
 
 export interface PatchedPackageDetails extends PackageDetails {
   version: string
+  matchMajor?: boolean
   patchFilename: string
   isDevOnly: boolean
   sequenceName?: string
@@ -22,6 +23,7 @@ export function parseNameAndVersion(
 ): {
   packageName: string
   version?: string
+  matchMajor?: boolean
   sequenceName?: string
   sequenceNumber?: number
 } | null {
@@ -36,7 +38,7 @@ export function parseNameAndVersion(
     return { packageName: str }
   }
   const versionIndex = parts.findIndex((part) =>
-    part.match(/^\d+\.\d+\.\d+.*$/),
+    part.match(/^\d+\.\d+\.\d+.*$/) || part.match(/^\d+$/),
   )
   if (versionIndex === -1) {
     const [scope, name] = parts
@@ -59,9 +61,12 @@ export function parseNameAndVersion(
   }
 
   const version = parts[versionIndex]
+  const matchMajor = /^\d+$/.test(version)
   const sequenceParts = parts.slice(versionIndex + 1)
   if (sequenceParts.length === 0) {
-    return { packageName, version }
+    return matchMajor
+      ? { packageName, version, matchMajor }
+      : { packageName, version }
   }
 
   // expect sequenceParts[0] to be a number, strip leading 0s
@@ -71,7 +76,9 @@ export function parseNameAndVersion(
   }
   switch (sequenceParts.length) {
     case 1: {
-      return { packageName, version, sequenceNumber }
+      return matchMajor
+        ? { packageName, version, sequenceNumber, matchMajor }
+        : { packageName, version, sequenceNumber }
     }
     case 2: {
       return {
@@ -79,6 +86,7 @@ export function parseNameAndVersion(
         version,
         sequenceName: sequenceParts[1],
         sequenceNumber,
+        ...(matchMajor ? { matchMajor } : {}),
       }
     }
     default: {
@@ -124,6 +132,7 @@ export function getPackageDetailsFromPatchFilename(
     isDevOnly: patchFilename.endsWith(".dev.patch"),
     sequenceName: lastPart.sequenceName,
     sequenceNumber: lastPart.sequenceNumber,
+    ...(lastPart.matchMajor ? { matchMajor: true } : {}),
   }
 }
 

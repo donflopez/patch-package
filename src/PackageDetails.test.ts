@@ -344,4 +344,14 @@ Object {
 }
 `)
   })
+
+  it("works for major versions", () => {
+    expect(parseNameAndVersion("left-pad+1")).toMatchInlineSnapshot(`
+Object {
+  "matchMajor": true,
+  "packageName": "left-pad",
+  "version": "1",
+}
+`)
+  })
 })

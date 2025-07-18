@@ -258,6 +258,19 @@ to
 This will allow those patch files to be safely ignored when
 `NODE_ENV=production`.
 
+### Major version patches
+
+You can target an entire major version by renaming a patch file to include only
+the major number. For example, changing
+
+    package-name+1.2.3.patch
+
+to
+
+    package-name+1.patch
+
+will apply the patch to any installed `1.x` version of the package.
+
 ### Creating multiple patches for the same package
 
 _💡 This is an advanced feature and is not recommended unless you really, really
