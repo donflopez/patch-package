@@ -91,6 +91,21 @@ function logPatchApplication(patchDetails: PatchedPackageDetails) {
   )
 }
 
+function versionsMatch({
+  patchVersion,
+  installedVersion,
+  matchMajor,
+}: {
+  patchVersion: string
+  installedVersion: string
+  matchMajor?: boolean
+}): boolean {
+  if (matchMajor) {
+    return semver.major(installedVersion) === parseInt(patchVersion, 10)
+  }
+  return installedVersion === patchVersion
+}
+
 export function applyPatchesForApp({
   appPath,
   reverse,
@@ -269,7 +284,13 @@ export function applyPatchesForPackage({
         appliedPatches.push(patchDetails)
         // yay patch was applied successfully
         // print warning if version mismatch
-        if (installedPackageVersion !== version) {
+        if (
+          !versionsMatch({
+            patchVersion: version,
+            installedVersion: installedPackageVersion,
+            matchMajor: patchDetails.matchMajor,
+          })
+        ) {
           warnings.push(
             createVersionMismatchWarning({
               packageName: name,
@@ -287,7 +308,13 @@ export function applyPatchesForPackage({
         // because we don't want to apply more patches on top of the broken state
         failedPatch = patchDetails
         break packageLoop
-      } else if (installedPackageVersion === version) {
+      } else if (
+        versionsMatch({
+          patchVersion: version,
+          installedVersion: installedPackageVersion,
+          matchMajor: patchDetails.matchMajor,
+        })
+      ) {
         // completely failed to apply patch
         // TODO: propagate useful error messages from patch application
         errors.push(
